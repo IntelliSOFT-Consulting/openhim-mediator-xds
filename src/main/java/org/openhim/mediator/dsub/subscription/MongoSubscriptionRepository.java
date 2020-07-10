@@ -50,8 +50,8 @@ public class MongoSubscriptionRepository extends MongoSupport implements Subscri
         }
 
         Document existing = collection.find(Filters.eq(ID, subscription.getUuid())).first();
-        
-        // Check if url exists in the database and active
+
+        // Check if url is valid, exists in the database and active
         if (isUrlValid(URL)) {
             if (existing == null || activeSubscriptions(URL)) {
                 log.info("Saving subscription for: " + subscription.getUrl());
@@ -61,7 +61,7 @@ public class MongoSubscriptionRepository extends MongoSupport implements Subscri
                         .append(FACILITY_QUERY, subscription.getFacilityQuery());
                 collection.insertOne(doc);
             } else {
-                log.warning("Subscription already exists: " + subscription.getUuid());
+                log.warning("Subscription already exists: " + subscription.getUuid() + URL);
             }
 
         } else {
