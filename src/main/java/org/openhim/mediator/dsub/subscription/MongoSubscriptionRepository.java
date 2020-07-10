@@ -50,11 +50,10 @@ public class MongoSubscriptionRepository extends MongoSupport implements Subscri
         }
 
         Document existing = collection.find(Filters.eq(ID, subscription.getUuid())).first();
+        
         // Check if url exists in the database and active
-        // Document existingUrl = collection.find(Filters.eq(subscription.getUrl(),
-        // URL)).first();
         if (isUrlValid(URL)) {
-            if (existing == null) {
+            if (existing == null || activeSubscriptions(URL)) {
                 log.info("Saving subscription for: " + subscription.getUrl());
 
                 Document doc = new Document(ID, subscription.getUuid()).append(URL, subscription.getUrl())
@@ -89,6 +88,27 @@ public class MongoSubscriptionRepository extends MongoSupport implements Subscri
         }
 
         return subscriptions;
+    }
+
+    public boolean activeSubscriptions(String url) {
+        Boolean isActiveSubscription = true;
+        FindIterable<Document> result = getCollection()
+                .find(Filters.and(Filters.or(Filters.eq(URL, url), Filters.ne(URL, null)),
+                        Filters.or(Filters.gt(TERMINATE_AT, new Date()), Filters.eq(TERMINATE_AT, null))));
+
+        List<Subscription> subscriptions = new ArrayList<>();
+        for (Document document : result) {
+            subscriptions.add(deserialize(document));
+        }
+
+        if (subscriptions.isEmpty()) {
+            isActiveSubscription = false;
+        } else {
+            isActiveSubscription = true;
+            
+        }
+
+        return isActiveSubscription;
     }
 
     private Subscription deserialize(Document document) {
