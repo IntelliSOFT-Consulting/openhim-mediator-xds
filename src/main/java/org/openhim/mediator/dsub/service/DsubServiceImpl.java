@@ -9,6 +9,7 @@ import org.openhim.mediator.dsub.subscription.SubscriptionRepository;
 
 import java.util.Date;
 import java.util.List;
+import java.net.URL;
 
 public class DsubServiceImpl implements DsubService {
 
@@ -17,25 +18,40 @@ public class DsubServiceImpl implements DsubService {
     private final SubscriptionNotifier subscriptionNotifier;
     private final LoggingAdapter log;
 
-    public DsubServiceImpl(PullPointFactory pullPointFactory,
-                           SubscriptionRepository subscriptionRepository,
-                           SubscriptionNotifier subscriptionNotifier,
-                           LoggingAdapter log) {
+    public DsubServiceImpl(PullPointFactory pullPointFactory, SubscriptionRepository subscriptionRepository,
+            SubscriptionNotifier subscriptionNotifier, LoggingAdapter log) {
         this.pullPointFactory = pullPointFactory;
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionNotifier = subscriptionNotifier;
         this.log = log;
     }
 
+    public static boolean isUrlValid(String url) {
+
+        try {
+            new URL(url).toURI();
+            return true;
+        }
+
+        catch (Exception e) {
+            return false;
+        }
+    }
 
     @Override
     public void createSubscription(String url, String facilityQuery, Date terminateAt) {
         log.info("Request to create subscription for: " + url);
 
-        Subscription subscription = new Subscription(url,
-                terminateAt, facilityQuery);
+        if (isUrlValid(url)) {
+            log.info("Valid URL: " + url);
+            Subscription subscription = new Subscription(url, terminateAt, facilityQuery);
 
-        subscriptionRepository.saveSubscription(subscription);
+            subscriptionRepository.saveSubscription(subscription);
+        }
+        else{
+            log.info("Invalid URL: " + url);
+        }
+
     }
 
     @Override
@@ -46,8 +62,7 @@ public class DsubServiceImpl implements DsubService {
 
     @Override
     public void notifyNewDocument(String docId, String facilityId) {
-        List<Subscription> subscriptions = subscriptionRepository
-                .findActiveSubscriptions(facilityId);
+        List<Subscription> subscriptions = subscriptionRepository.findActiveSubscriptions(facilityId);
 
         log.info("Active subscriptions: {}", subscriptions.size());
         for (Subscription sub : subscriptions) {

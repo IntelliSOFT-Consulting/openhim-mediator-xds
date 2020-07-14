@@ -52,9 +52,9 @@ public class MongoSubscriptionRepository extends MongoSupport implements Subscri
         Document existing = collection.find(Filters.eq(ID, subscription.getUuid())).first();
 
         // Check if url is valid, exists in the database and active
-        if (isUrlValid(URL)) {
-            if (existing == null || activeSubscriptions(URL)) {
-                log.info("Saving subscription for: " + subscription.getUrl());
+        if (isUrlValid(subscription.getUrl())) {
+            if (existing == null || activeSubscriptions(subscription.getUrl())) {
+                log.info("Saving subscription for: " + isUrlValid(subscription.getUrl()));
 
                 Document doc = new Document(ID, subscription.getUuid()).append(URL, subscription.getUrl())
                         .append(TERMINATE_AT, subscription.getTerminateAt())
@@ -65,7 +65,7 @@ public class MongoSubscriptionRepository extends MongoSupport implements Subscri
             }
 
         } else {
-            log.warning("Invalid URL: " + URL);
+            log.warning("Invalid URL Check 2: " + subscription.getUrl());
         }
 
     }
