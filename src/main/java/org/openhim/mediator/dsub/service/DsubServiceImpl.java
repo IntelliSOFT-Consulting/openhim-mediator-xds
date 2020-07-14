@@ -3,6 +3,7 @@ package org.openhim.mediator.dsub.service;
 import akka.event.LoggingAdapter;
 import org.openhim.mediator.dsub.pull.PullPoint;
 import org.openhim.mediator.dsub.pull.PullPointFactory;
+import org.openhim.mediator.dsub.subscription.MongoSubscriptionRepository;
 import org.openhim.mediator.dsub.subscription.Subscription;
 import org.openhim.mediator.dsub.subscription.SubscriptionNotifier;
 import org.openhim.mediator.dsub.subscription.SubscriptionRepository;
@@ -17,13 +18,15 @@ public class DsubServiceImpl implements DsubService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionNotifier subscriptionNotifier;
     private final LoggingAdapter log;
+    private final MongoSubscriptionRepository mongoSubscriptionRepository;
 
     public DsubServiceImpl(PullPointFactory pullPointFactory, SubscriptionRepository subscriptionRepository,
-            SubscriptionNotifier subscriptionNotifier, LoggingAdapter log) {
+            SubscriptionNotifier subscriptionNotifier, LoggingAdapter log, MongoSubscriptionRepository mongoSubscriptionRepository) {
         this.pullPointFactory = pullPointFactory;
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionNotifier = subscriptionNotifier;
         this.log = log;
+        this.mongoSubscriptionRepository = mongoSubscriptionRepository;
     }
 
     public static boolean isUrlValid(String url) {
@@ -44,9 +47,15 @@ public class DsubServiceImpl implements DsubService {
 
         if (isUrlValid(url)) {
             log.info("Valid URL: " + url);
-            Subscription subscription = new Subscription(url, terminateAt, facilityQuery);
+            if (!mongoSubscriptionRepository.activeSubscriptions(url)) {
+                log.info("The URL Subscription doesn't exists or inactive: " + url);
+                Subscription subscription = new Subscription(url, terminateAt, facilityQuery);
 
-            subscriptionRepository.saveSubscription(subscription);
+                subscriptionRepository.saveSubscription(subscription);
+            } else {
+                log.info("The URL Subscription exists and is active: " + url);
+            }
+            
         }
         else{
             log.info("Invalid URL: " + url);
