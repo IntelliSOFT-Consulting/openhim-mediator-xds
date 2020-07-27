@@ -47,15 +47,10 @@ public class DsubServiceImpl implements DsubService {
 
         if (isUrlValid(url)) {
             log.info("Valid URL: " + url);
-            if (!mongoSubscriptionRepository.activeSubscriptions(url)) {
                 log.info("The URL Subscription doesn't exists or inactive: " + url);
                 Subscription subscription = new Subscription(url, terminateAt, facilityQuery);
 
                 subscriptionRepository.saveSubscription(subscription);
-            } else {
-                log.info("The URL Subscription exists and is active: " + url);
-            }
-            
         }
         else{
             log.info("Invalid URL: " + url);
