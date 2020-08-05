@@ -70,8 +70,13 @@ public class DsubServiceImpl implements DsubService {
 
         log.info("Active subscriptions: {}", subscriptions.size());
         for (Subscription sub : subscriptions) {
-            log.info("URL: {}", sub.getUrl());
-            subscriptionNotifier.notifySubscription(sub, docId);
+            if (isUrlValid(sub.getUrl())) {
+                log.info("URL: {}", sub.getUrl());
+                subscriptionNotifier.notifySubscription(sub, docId);
+            } else {
+                log.info("Encountered a Malformed URL: {}", sub.getUrl());
+            }
+            
         }
     }
 
