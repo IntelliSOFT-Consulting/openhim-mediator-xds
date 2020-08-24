@@ -1,6 +1,9 @@
 package org.openhim.mediator.dsub.subscription;
 
 import akka.event.LoggingAdapter;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCursor;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -91,9 +94,11 @@ public class MongoSubscriptionRepository extends MongoSupport implements Subscri
 
     public boolean activeSubscriptions(String url) {
         Boolean isActiveSubscription = true;
-        FindIterable<Document> result = getCollection()
-                .find(Filters.and(Filters.or(Filters.eq(URL, url), Filters.ne(URL, null)),
-                        Filters.or(Filters.gt(TERMINATE_AT, new Date()), Filters.eq(TERMINATE_AT, null))));
+        BasicDBObject getQuery = new BasicDBObject();
+
+        getQuery.put(TERMINATE_AT, new BasicDBObject("$gt", new Date()));
+        getQuery.put(URL, new BasicDBObject("$eq",url));
+        FindIterable<Document> result = getCollection().find(getQuery);
 
         List<Subscription> subscriptions = new ArrayList<>();
         for (Document document : result) {

@@ -45,7 +45,7 @@ public class DsubServiceImpl implements DsubService {
     public void createSubscription(String url, String facilityQuery, Date terminateAt) {
         log.info("Request to create subscription for: " + url);
 
-        if (isUrlValid(url)) {
+        if (isUrlValid(url) && !(mongoSubscriptionRepository.findActiveSubscriptions(facilityQuery).isEmpty())) {
             log.info("Valid URL: " + url);
                 log.info("The URL Subscription doesn't exists or inactive: " + url);
                 Subscription subscription = new Subscription(url, terminateAt, facilityQuery);
@@ -53,7 +53,7 @@ public class DsubServiceImpl implements DsubService {
                 subscriptionRepository.saveSubscription(subscription);
         }
         else{
-            log.info("Invalid URL: " + url);
+            log.info("Invalid URL or subscription already exists: " + url);
         }
 
     }
